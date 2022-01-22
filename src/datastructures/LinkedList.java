@@ -13,6 +13,17 @@ public class LinkedList<T> {
         return this.headLink;
     }
 
+    public int length(){
+        int count = 0;
+        Node<T> runner = this.headLink;
+
+        while(runner != null){
+            count++;
+            runner = runner.getNext();
+        }
+        return count;
+    }
+
     public boolean deleteNodeWithValue(T value){
         Node<T> runner = this.headLink;
 
@@ -38,7 +49,7 @@ public class LinkedList<T> {
     }
 
     public void appendToEnd(T item){
-        Node<T> newItem = new Node<T>(item);
+        Node<T> newItem = new Node<>(item);
         Node<T> current = this.headLink;
         while(current.getNext() != null){
             current = current.getNext();
@@ -51,6 +62,7 @@ public class LinkedList<T> {
        O(N) space
        We save a hash set to check if the current value is already in it,
        if so we delete the node.
+       2.1 Remove Dups
      */
     public void deleteDupsWithExtraSpace(){
         HashSet<T> set = new HashSet<>();
@@ -73,6 +85,7 @@ public class LinkedList<T> {
     O(1) space
     Running with a pointer on the linked list and comparing to the current pointer
     deleting if equals.
+    2.1 Remove Dups
      */
     public void deleteDupsWithoutExtraSpace(){
         Node<T> current = this.headLink;
@@ -92,4 +105,30 @@ public class LinkedList<T> {
             current = current.getNext();
         }
     }
+
+    /*
+    We are moving two pointers simultaneously, the runner is k nodes apart and will hit the end of list
+    when the kth element is at the kth element from the end of the list.
+    O(N) runtime
+    O(1) space
+    2.2 Return Kth to Last
+     */
+    public Node<T> KthLastElementSinglyLinked(int k) {
+        Node<T> kth = this.headLink;
+        Node<T> runner = this.headLink;
+        for(int i=0; i<k; i++) {
+            // We entered the for loop when k is bigger than the list's length
+            if (runner == null) {
+                return null;
+            }
+            runner = runner.getNext();
+        }
+
+        while(runner != null){
+            kth = kth.getNext();
+            runner = runner.getNext();
+        }
+        return kth;
+    }
+
 }
