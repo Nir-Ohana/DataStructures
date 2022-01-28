@@ -9,6 +9,12 @@ public class Node<T> {
         this.value = value;
     }
 
+    public Node(T value, Node<T> prev, Node<T> next){
+        this.value = value;
+        this.prev = prev;
+        this.next = next;
+    }
+
     public T getValue() {
         return value;
     }

@@ -1,134 +1,232 @@
 package datastructures;
 
-import java.util.HashSet;
-
-public class LinkedList<T> {
+public class LinkedList<T> implements Iterable<T> {
+    private int size = 0;
     private Node<T> headLink;
+    private Node<T> tail = null;
 
-    public LinkedList(Node<T> head){
+
+    public LinkedList(Node<T> head) {
         this.headLink = head;
     }
 
-    public Node<T> getHead(){
+    // Empty the linked list
+    // O(n) time
+    public void clear() {
+        Node<T> runner = this.headLink;
+        while (runner != null) {
+            Node<T> next = runner.getNext();
+            runner.setPrev(null);
+            runner.setNext(null);
+            runner = next;
+        }
+        this.headLink = this.tail = null;
+        size = 0;
+    }
+
+    public int size() {
+        return this.size;
+    }
+
+    public boolean isEmpty() {
+        return this.size == 0;
+    }
+
+    public Node<T> getHead() {
         return this.headLink;
     }
 
-    public int length(){
+    public int length() {
         int count = 0;
         Node<T> runner = this.headLink;
 
-        while(runner != null){
+        while (runner != null) {
             count++;
             runner = runner.getNext();
         }
         return count;
     }
 
-    public boolean deleteNodeWithValue(T value){
-        Node<T> runner = this.headLink;
+    public void appendToHead(T item) {
+        if (isEmpty()) {
+            this.headLink = this.tail = new Node<>(item, null, null);
+        } else {
+            this.headLink.setPrev(new Node<>(item, null, this.headLink));
+            this.headLink = this.headLink.getPrev();
+        }
+        this.size += 1;
+    }
 
-        // Change head
-        if(runner.getValue() == value){
-            this.headLink = runner.getNext();
-            return true;
+    public void appendToTail(T item) {
+        if (isEmpty()) {
+            headLink = tail = new Node<>(item, null, null);
+        } else {
+            tail.setNext(new Node<>(item, tail, null));
+            tail = tail.getNext();
+        }
+        size += 1;
+    }
+
+    public T peekFirst() {
+        if (isEmpty())
+            throw new RuntimeException("Empty list");
+        return this.headLink.getValue();
+    }
+
+    public T peekLast() {
+        if (isEmpty())
+            throw new RuntimeException("Empty list");
+        return this.tail.getValue();
+    }
+
+    public T removeFirst() {
+        if (isEmpty())
+            throw new RuntimeException("Empty list");
+
+        T value = this.headLink.getValue();
+        this.headLink = this.headLink.getNext();
+        size -= 1;
+
+        if (isEmpty()) {
+            tail = null;
+        } else {
+            this.headLink.setPrev(null);
         }
 
-        while(runner != null){
-            if(runner.getValue() == value){
-                if(runner.getPrev() != null){
-                    runner.getPrev().setNext(runner.getNext());
+        return value;
+    }
+
+    public T removeLast() {
+        if (isEmpty())
+            throw new RuntimeException("Empty list");
+
+        T value = this.tail.getValue();
+        this.tail = this.tail.getPrev();
+        size -= 1;
+
+        if (isEmpty()) {
+            this.headLink = null;
+        } else {
+            this.tail.setNext(null);
+        }
+        return value;
+    }
+
+    private T remove(Node<T> node) {
+        if (node.getPrev() == null)
+            return removeFirst();
+        if (node.getNext() == null)
+            return removeLast();
+
+        node.getNext().setPrev(node.getPrev());
+        node.getPrev().setNext(node.getNext());
+
+        T data = node.getValue();
+
+        node.setValue(null);
+        node.setPrev(null);
+        node.setNext(null);
+        node.setValue(null);
+        size -= 1;
+
+        return data;
+    }
+
+    public T removeAt(int index) {
+
+        if (index < 0 || index >= size)
+            throw new IllegalArgumentException();
+
+        int i;
+        Node<T> runner;
+
+        // If index in first half search from head
+        if (index < this.size / 2) {
+            for (i = 0, runner = this.headLink; i != index; i++)
+                runner = runner.getNext();
+        } else {
+            for (i = this.size - 1, runner = this.tail; i != index; i--)
+                runner = runner.getPrev();
+        }
+
+        return remove(runner);
+    }
+
+    public boolean remove(Object obj) {
+        Node<T> runner;
+
+        if (obj == null) {
+            for (runner = this.headLink; runner != null; runner = runner.getNext()) {
+                if (runner.getValue() == null) {
+                    remove(runner);
+                    return true;
                 }
-                if(runner.getNext() != null){
-                    runner.getNext().setPrev(runner.getPrev());
-                }
-            return true;
             }
-            runner = runner.getNext();
+        } else {
+            for (runner = this.headLink; runner != null; runner = runner.getNext()) {
+                if (obj.equals(runner.getValue())) {
+                    remove(runner);
+                    return true;
+                }
+            }
         }
+
         return false;
     }
 
-    public void appendToEnd(T item){
-        Node<T> newItem = new Node<>(item);
-        Node<T> current = this.headLink;
-        while(current.getNext() != null){
-            current = current.getNext();
-        }
-        current.setNext(newItem);
-        newItem.setPrev(current);
-    }
+    public int indexOf(Object obj) {
+        int index = 0;
+        Node<T> runner;
 
-    /* O(N) run time
-       O(N) space
-       We save a hash set to check if the current value is already in it,
-       if so we delete the node.
-       2.1 Remove Dups
-     */
-    public void deleteDupsWithExtraSpace(){
-        HashSet<T> set = new HashSet<>();
-        Node<T> previous = null;
-        Node<T> runner = this.headLink;
-        while(runner != null){
-            if (set.contains(runner.getValue())){
-                previous.setNext(runner.getNext());
-            }
-            else{
-                set.add(runner.getValue());
-                previous = runner;
-            }
-            runner = runner.getNext();
-        }
-    }
-
-    /*
-    O(N^2) runtime
-    O(1) space
-    Running with a pointer on the linked list and comparing to the current pointer
-    deleting if equals.
-    2.1 Remove Dups
-     */
-    public void deleteDupsWithoutExtraSpace(){
-        Node<T> current = this.headLink;
-        while (current != null){
-            Node<T> runner = current;
-            while(runner.getNext() != null){
-                if (runner.getNext().getValue() == current.getValue()){
-                    runner.setNext(runner.getNext().getNext());
-                    if(runner.getNext() != null){
-                        runner.getNext().setPrev(runner);
-                    }
-                }
-                else{
-                    runner = runner.getNext();
+        if (obj == null) {
+            for (runner = this.headLink; runner != null; runner = runner.getNext(), index++) {
+                if (runner.getValue() == null) {
+                    return index;
                 }
             }
-            current = current.getNext();
+        } else {
+            for (runner = this.headLink; runner != null; runner = runner.getNext(), index++) {
+                if (obj.equals(runner.getValue())) {
+                    return index;
+                }
+            }
+
         }
+        return -1;
     }
 
-    /*
-    We are moving two pointers simultaneously, the runner is k nodes apart and will hit the end of list
-    when the kth element is at the kth element from the end of the list.
-    O(N) runtime
-    O(1) space
-    2.2 Return Kth to Last
-     */
-    public Node<T> KthLastElementSinglyLinked(int k) {
-        Node<T> kth = this.headLink;
-        Node<T> runner = this.headLink;
-        for(int i=0; i<k; i++) {
-            // We entered the for loop when k is bigger than the list's length
-            if (runner == null) {
-                return null;
-            }
-            runner = runner.getNext();
-        }
+    public boolean contains(Object obj) {
+        return indexOf(obj) != -1;
+    }
 
-        while(runner != null){
-            kth = kth.getNext();
-            runner = runner.getNext();
+    @Override
+    public java.util.Iterator<T> iterator() {
+        return new java.util.Iterator<>() {
+            private Node<T> runner = headLink;
+
+            @Override
+            public boolean hasNext() {
+                return runner != null;
+            }
+
+            @Override
+            public T next() {
+                T value = runner.getValue();
+                runner = runner.getNext();
+                return value;
+            }
+        };
+    }
+
+    @Override public String toString() {
+        StringBuilder sb = new StringBuilder();
+        Node<T> runner;
+        sb.append("[");
+        for(runner = headLink; runner.getNext() != null; runner = runner.getNext()){
+            sb.append(runner.getValue().toString()).append(", ");
         }
-        return kth;
+        sb.append(runner.getValue()).append("]");
+        return sb.toString();
     }
 
 }
